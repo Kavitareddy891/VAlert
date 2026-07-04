@@ -1,0 +1,637 @@
+{% extends "detection/base.html" %}
+{% block title %}VALERT — Analyze Video{% endblock %}
+
+{% block extra_styles %}
+.upload-layout {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+.page-header {
+  margin-bottom: 32px;
+}
+
+.page-title {
+  font-family: var(--condensed);
+  font-size: 36px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+
+.page-sub {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.drop-zone {
+  border: 2px dashed var(--border-lit);
+  border-radius: 8px;
+  padding: 60px 40px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--bg-card);
+  position: relative;
+}
+
+.drop-zone:hover,
+.drop-zone.dragover {
+  border-color: var(--red-dim);
+  background: rgba(255,34,68,0.04);
+}
+
+.drop-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.4;
+}
+
+.drop-title {
+  font-family: var(--condensed);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.drop-sub {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+.drop-formats {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+#fileInput { display: none; }
+
+.file-info {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-lit);
+  border-radius: 4px;
+  margin-top: 16px;
+}
+
+.file-info-name {
+  font-family: var(--mono);
+  font-size: 13px;
+  flex: 1;
+}
+
+.file-info-size {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.progress-section {
+  display: none;
+  margin-top: 24px;
+}
+
+.progress-track {
+  height: 4px;
+  background: var(--bg-raised);
+  border-radius: 2px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--red);
+  width: 100%;
+  animation: scanning 2s linear infinite;
+}
+
+@keyframes scanning {
+  0%   { opacity: 1; }
+  50%  { opacity: 0.4; }
+  100% { opacity: 1; }
+}
+
+.progress-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 8px;
+  letter-spacing: 1px;
+}
+
+.results-section {
+  display: none;
+  margin-top: 32px;
+}
+
+.results-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.results-title {
+  font-family: var(--condensed);
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.summary-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 16px;
+  text-align: center;
+}
+
+.summary-card.highlight-red   { border-color: var(--red-dim);   background: var(--red-glow); }
+.summary-card.highlight-green { border-color: var(--green-dim); background: var(--green-glow); }
+
+.summary-val {
+  font-family: var(--condensed);
+  font-size: 32px;
+  font-weight: 900;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.summary-val.red   { color: var(--red); }
+.summary-val.green { color: var(--green); }
+.summary-val.amber { color: var(--amber); }
+
+.summary-lbl {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* Overall verdict */
+.verdict {
+  padding: 20px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  background: var(--bg-card);
+}
+
+.verdict.violence-detected {
+  border-color: var(--red-dim);
+  background: var(--red-glow);
+  animation: threat-pulse 2s ease-in-out infinite;
+}
+
+.verdict.no-violence {
+  border-color: var(--green-dim);
+  background: var(--green-glow);
+}
+
+@keyframes threat-pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(255,34,68,0.3); }
+  50%      { box-shadow: 0 0 0 8px rgba(255,34,68,0); }
+}
+
+.verdict-icon { font-size: 32px; }
+
+.verdict-label {
+  font-family: var(--condensed);
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+.verdict.violence-detected .verdict-label { color: var(--red); }
+.verdict.no-violence       .verdict-label { color: var(--green); }
+
+.verdict-sub {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.timeline-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.timeline-header {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-panel);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.timeline-title {
+  font-family: var(--condensed);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.chart-wrap { padding: 20px; }
+
+#timelineChart { width: 100%; height: 160px; }
+
+.frame-table-wrap {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.frame-table-wrap::-webkit-scrollbar { width: 4px; }
+.frame-table-wrap::-webkit-scrollbar-thumb { background: var(--border); }
+
+table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 12px; }
+
+th {
+  padding: 10px 16px;
+  text-align: left;
+  color: var(--text-muted);
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-panel);
+  position: sticky; top: 0;
+}
+
+td {
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+tr:last-child td { border-bottom: none; }
+tr:hover td      { background: var(--bg-raised); }
+
+.td-violence { color: var(--red);   font-weight: bold; }
+.td-safe     { color: var(--green); }
+
+.actions-row {
+  margin-top: 24px;
+  display: flex;
+  gap: 10px;
+}
+{% endblock %}
+
+{% block content %}
+<div class="upload-layout">
+
+  <div class="page-header">
+    <div style="margin-bottom:8px"><span class="tag tag-blue">Video Analysis</span></div>
+    <div class="page-title">↑ ANALYZE VIDEO FILE</div>
+    <div class="page-sub">Upload a video to scan for violence. The system samples frames throughout the footage.</div>
+  </div>
+
+  <!-- DROP ZONE -->
+  <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+    <div class="drop-icon">▶</div>
+    <div class="drop-title">Drop video here or click to browse</div>
+    <div class="drop-sub">Supports MP4, AVI, MOV, MKV — max 500MB</div>
+    <div class="drop-formats">
+      <span class="tag tag-blue">MP4</span>
+      <span class="tag tag-blue">AVI</span>
+      <span class="tag tag-blue">MOV</span>
+      <span class="tag tag-blue">MKV</span>
+    </div>
+    <input type="file" id="fileInput" accept="video/*">
+  </div>
+
+  <div class="file-info" id="fileInfo">
+    <span style="font-size:18px">▶</span>
+    <span class="file-info-name" id="fileName">—</span>
+    <span class="file-info-size" id="fileSize">—</span>
+    <button class="btn btn-red" onclick="analyzeVideo()" id="analyzeBtn">◈ Run Analysis</button>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="progress-section" id="progressSection">
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <div class="progress-label">UPLOADING & ANALYZING... PLEASE WAIT</div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results-section" id="resultsSection">
+
+    <div class="results-header">
+      <div class="results-title">Analysis Report</div>
+    </div>
+
+    <!-- Verdict -->
+    <div class="verdict" id="verdictCard">
+      <div class="verdict-icon" id="verdictIcon">◈</div>
+      <div class="verdict-text">
+        <div class="verdict-label" id="verdictLabel">—</div>
+        <div class="verdict-sub"  id="verdictSub">—</div>
+      </div>
+      <div style="margin-left:auto">
+        <div class="threat-meter-wrap" style="width:200px">
+          <div class="threat-meter-label">
+            <span>VIOLENCE RATE</span>
+            <span id="vRatePct">—</span>
+          </div>
+          <div class="threat-meter-track">
+            <div class="threat-meter-fill" id="vRateFill"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="summary-grid" id="summaryGrid"></div>
+
+    <!-- Timeline chart -->
+    <div class="timeline-section" style="margin-bottom:16px">
+      <div class="timeline-header">
+        <span class="timeline-title">CONFIDENCE TIMELINE</span>
+        <span class="tag tag-red" style="font-size:10px" id="frameCountTag">—</span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="timelineChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Frame table -->
+    <div class="timeline-section">
+      <div class="timeline-header">
+        <span class="timeline-title">FRAME DETAILS</span>
+        <span class="tag tag-blue" style="font-size:10px">SAMPLED FRAMES</span>
+      </div>
+      <div class="frame-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Frame #</th>
+              <th>Confidence</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="frameTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="actions-row">
+      <button class="btn btn-ghost" onclick="resetForm()">↺ Analyze Another</button>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+let selectedFile = null;
+
+// Drag & drop
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('video/')) selectFile(f);
+});
+
+fileInput.addEventListener('change', () => {
+  if (fileInput.files[0]) selectFile(fileInput.files[0]);
+});
+
+function selectFile(f) {
+  selectedFile = f;
+  document.getElementById('fileName').textContent = f.name;
+  document.getElementById('fileSize').textContent = (f.size / 1024 / 1024).toFixed(1) + ' MB';
+  document.getElementById('fileInfo').style.display = 'flex';
+  document.getElementById('resultsSection').style.display = 'none';
+}
+
+function getCookie(name) {
+  const v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+  return v ? v[2] : '';
+}
+
+async function analyzeVideo() {
+  if (!selectedFile) return;
+
+  document.getElementById('progressSection').style.display = 'block';
+  document.getElementById('analyzeBtn').disabled = true;
+  document.getElementById('resultsSection').style.display = 'none';
+
+  const formData = new FormData();
+  formData.append('video', selectedFile);
+
+  try {
+    const res = await fetch('/api/analyze-video/', {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCookie('csrftoken') },
+      body: formData,
+    });
+    const data = await res.json();
+    document.getElementById('progressSection').style.display = 'none';
+
+    if (data.error) {
+      alert('Error: ' + data.error);
+      document.getElementById('analyzeBtn').disabled = false;
+      return;
+    }
+
+    showResults(data);
+  } catch(e) {
+    alert('Request failed: ' + e.message);
+    document.getElementById('progressSection').style.display = 'none';
+    document.getElementById('analyzeBtn').disabled = false;
+  }
+}
+
+function showResults(data) {
+  // ✅ FIX: exact match instead of .includes() which wrongly matches 'NO VIOLENCE'
+  const isViolence = data.overall_label === 'VIOLENCE DETECTED';
+  const vPct = data.violence_percentage;
+
+  // Verdict card
+  const vCard = document.getElementById('verdictCard');
+  vCard.className = 'verdict ' + (isViolence ? 'violence-detected' : 'no-violence');
+  document.getElementById('verdictIcon').textContent  = isViolence ? '⚠' : '✓';
+  document.getElementById('verdictLabel').textContent = data.overall_label;
+  document.getElementById('verdictSub').textContent   =
+    `${data.violence_count} of ${data.total_analyzed} sampled frames flagged · ${data.duration}s duration`;
+
+  // Threat meter
+  document.getElementById('vRatePct').textContent          = vPct.toFixed(1) + '%';
+  document.getElementById('vRateFill').style.width         = Math.min(vPct, 100) + '%';
+
+  // Summary cards — green highlight when safe, red when violence
+  const sg = document.getElementById('summaryGrid');
+  sg.innerHTML = `
+    <div class="summary-card ${isViolence ? 'highlight-red' : 'highlight-green'}">
+      <div class="summary-val ${isViolence ? 'red' : 'green'}">${vPct.toFixed(1)}%</div>
+      <div class="summary-lbl">Violence Rate</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-val amber">${data.max_confidence.toFixed(3)}</div>
+      <div class="summary-lbl">Max Confidence</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-val">${data.avg_confidence.toFixed(3)}</div>
+      <div class="summary-lbl">Avg Confidence</div>
+    </div>
+    <div class="summary-card ${isViolence ? 'highlight-red' : ''}">
+      <div class="summary-val ${isViolence ? 'red' : 'green'}">${data.violence_count}</div>
+      <div class="summary-lbl">Flagged Frames</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-val">${data.total_analyzed}</div>
+      <div class="summary-lbl">Frames Analyzed</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-val">${data.duration}s</div>
+      <div class="summary-lbl">Duration</div>
+    </div>
+  `;
+
+  document.getElementById('frameCountTag').textContent = data.total_analyzed + ' FRAMES';
+
+  renderChart(data.frame_results, isViolence);
+
+  // Frame table
+  const tbody = document.getElementById('frameTableBody');
+  tbody.innerHTML = '';
+  data.frame_results.forEach(r => {
+    const tr  = document.createElement('tr');
+    const isV = r.label === 'VIOLENCE';
+    tr.innerHTML = `
+      <td>${r.timestamp}s</td>
+      <td>${r.frame_number}</td>
+      <td class="${isV ? 'td-violence' : 'td-safe'}">${r.confidence}</td>
+      <td class="${isV ? 'td-violence' : 'td-safe'}">${r.label}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('resultsSection').style.display = 'block';
+  document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+function renderChart(frames, isViolence) {
+  const canvas = document.getElementById('timelineChart');
+  const w = canvas.parentElement.offsetWidth - 40;
+  canvas.width  = w;
+  canvas.height = 160;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, w, 160);
+
+  if (!frames.length) return;
+
+  const pad = { top: 10, right: 10, bottom: 30, left: 40 };
+  const cw  = w   - pad.left - pad.right;
+  const ch  = 160 - pad.top  - pad.bottom;
+
+  // Grid lines
+  ctx.strokeStyle = '#1e2d3d';
+  ctx.lineWidth   = 1;
+  [0, 0.3, 0.5, 0.7, 1.0].forEach(v => {
+    const y = pad.top + ch * (1 - v);
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + cw, y); ctx.stroke();
+    ctx.fillStyle = '#3d5166';
+    ctx.font      = '10px Share Tech Mono';
+    ctx.fillText(v.toFixed(1), 4, y + 4);
+  });
+
+  // Threshold line
+  const ty = pad.top + ch * (1 - 0.3);
+  ctx.setLineDash([4, 4]);
+  ctx.strokeStyle = '#ff2244';
+  ctx.lineWidth   = 1.5;
+  ctx.beginPath(); ctx.moveTo(pad.left, ty); ctx.lineTo(pad.left + cw, ty); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Points
+  const pts = frames.map((f, i) => ({
+    x: pad.left + (i / (frames.length - 1 || 1)) * cw,
+    y: pad.top  + ch * (1 - Math.min(f.confidence, 1)),
+  }));
+
+  // Fill area — green if safe overall, red if violence
+  const lineColor = isViolence ? 'rgba(255,34,68,0.8)'  : 'rgba(0,230,118,0.8)';
+  const fillTop   = isViolence ? 'rgba(255,34,68,0.35)' : 'rgba(0,230,118,0.25)';
+  const fillBot   = isViolence ? 'rgba(255,34,68,0.02)' : 'rgba(0,230,118,0.02)';
+
+  const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + ch);
+  grad.addColorStop(0, fillTop);
+  grad.addColorStop(1, fillBot);
+
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pad.top + ch);
+  pts.forEach(p => ctx.lineTo(p.x, p.y));
+  ctx.lineTo(pts[pts.length - 1].x, pad.top + ch);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  pts.forEach(p => ctx.lineTo(p.x, p.y));
+  ctx.strokeStyle = lineColor;
+  ctx.lineWidth   = 2;
+  ctx.stroke();
+
+  // Dots on violence frames
+  frames.forEach((f, i) => {
+    if (f.label === 'VIOLENCE') {
+      ctx.beginPath();
+      ctx.arc(pts[i].x, pts[i].y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = '#ff2244';
+      ctx.fill();
+    }
+  });
+
+  // X axis labels
+  ctx.fillStyle = '#3d5166';
+  ctx.font      = '9px Share Tech Mono';
+  const step    = Math.max(1, Math.floor(frames.length / 8));
+  frames.forEach((f, i) => {
+    if (i % step === 0) ctx.fillText(f.timestamp + 's', pts[i].x - 12, 160 - 8);
+  });
+}
+
+function resetForm() {
+  selectedFile = null;
+  document.getElementById('fileInfo').style.display      = 'none';
+  document.getElementById('resultsSection').style.display = 'none';
+  document.getElementById('analyzeBtn').disabled          = false;
+  document.getElementById('progressSection').style.display = 'none';
+  fileInput.value = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+{% endblock %}

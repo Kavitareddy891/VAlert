@@ -1,0 +1,239 @@
+{% extends "detection/base.html" %}
+{% block title %}VALERT — Dashboard{% endblock %}
+{% block extra_styles %}
+.dash-layout{max-width:1200px;margin:0 auto;padding:28px 24px}
+.page-header{margin-bottom:28px}
+.page-title{font-family:var(--condensed);font-size:32px;font-weight:900;letter-spacing:1px;margin-bottom:4px}
+.page-sub{font-size:13px;color:var(--text-secondary)}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:20px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.stat-card.red::before{background:var(--red)}
+.stat-card.green::before{background:var(--green)}
+.stat-card.blue::before{background:var(--blue)}
+.stat-card.amber::before{background:var(--amber)}
+.stat-val{font-family:var(--condensed);font-size:42px;font-weight:900;line-height:1;margin-bottom:4px}
+.stat-val.red{color:var(--red)}.stat-val.green{color:var(--green)}.stat-val.blue{color:var(--blue)}.stat-val.amber{color:var(--amber)}
+.stat-lbl{font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.full-col{margin-bottom:16px}
+.panel{background:var(--bg-card);border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.chart-area{padding:20px}
+canvas{width:100%!important}
+.section-title{font-family:var(--condensed);font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase}
+table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px}
+th{padding:9px 14px;text-align:left;color:var(--text-muted);font-size:10px;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--bg-panel)}
+td{padding:8px 14px;border-bottom:1px solid var(--border);color:var(--text-secondary)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-raised)}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:2px;font-size:10px;font-weight:700;letter-spacing:1px;border:1px solid}
+.badge-v{color:var(--red);border-color:var(--red-dim);background:var(--red-glow)}
+.badge-s{color:var(--green);border-color:var(--green-dim);background:var(--green-glow)}
+.screenshot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;padding:16px}
+.screenshot-item{border-radius:4px;overflow:hidden;border:1px solid var(--border);aspect-ratio:16/9;background:var(--bg-raised);position:relative}
+.screenshot-item img{width:100%;height:100%;object-fit:cover}
+.screenshot-time{position:absolute;bottom:0;left:0;right:0;padding:4px 6px;background:rgba(0,0,0,.7);font-family:var(--mono);font-size:9px;color:var(--red)}
+.no-data{padding:40px;text-align:center;font-family:var(--mono);font-size:12px;color:var(--text-muted)}
+{% endblock %}
+
+{% block content %}
+<div class="dash-layout">
+  <div class="page-header">
+    <div style="margin-bottom:8px"><span class="tag tag-blue">Analytics</span></div>
+    <div class="page-title">◈ DETECTION DASHBOARD</div>
+    <div class="page-sub">Your personal detection statistics and history</div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card red">
+      <div class="stat-val red">{{ violence_cnt }}</div>
+      <div class="stat-lbl">Violence Detected</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-val green">{{ safe_cnt }}</div>
+      <div class="stat-lbl">Safe Detections</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-val blue">{{ total }}</div>
+      <div class="stat-lbl">Total Events</div>
+    </div>
+    <div class="stat-card amber">
+      <div class="stat-val amber">{{ violence_rate }}%</div>
+      <div class="stat-lbl">Violence Rate</div>
+    </div>
+  </div>
+
+  <!-- Chart + Recent -->
+  <div class="two-col">
+    <!-- 7-day chart -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="section-title">7-Day Detection Trend</span>
+        <span class="tag tag-blue" style="font-size:10px">DAILY</span>
+      </div>
+      <div class="chart-area">
+        <canvas id="trendChart" height="200"></canvas>
+      </div>
+    </div>
+
+    <!-- Breakdown chart -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="section-title">Detection Breakdown</span>
+        <span class="tag tag-red" style="font-size:10px">OVERALL</span>
+      </div>
+      <div class="chart-area" style="display:flex;align-items:center;justify-content:center;min-height:200px">
+        <canvas id="pieChart" style="max-width:200px;max-height:200px"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent events table -->
+  <div class="full-col">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="section-title">Recent Events</span>
+        <a href="/history/" class="tag tag-blue" style="font-size:10px;text-decoration:none">VIEW ALL →</a>
+      </div>
+      {% if recent_events %}
+      <div style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr><th>Time</th><th>Type</th><th>Status</th><th>Confidence</th><th>Screenshot</th></tr>
+          </thead>
+          <tbody>
+            {% for e in recent_events %}
+            <tr>
+              <td>{{ e.timestamp|date:"M d, H:i:s" }}</td>
+              <td>{{ e.get_detection_type_display }}</td>
+              <td>
+                {% if e.status == 'violence' %}
+                  <span class="badge badge-v">⚠ VIOLENCE</span>
+                {% else %}
+                  <span class="badge badge-s">✓ SAFE</span>
+                {% endif %}
+              </td>
+              <td style="color:{% if e.status == 'violence' %}var(--red){% else %}var(--green){% endif %}">{{ e.confidence|floatformat:4 }}</td>
+              <td>{% if e.screenshot %}<span style="color:var(--blue)">📷 saved</span>{% else %}—{% endif %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="no-data">No detection events yet. Start Live or Upload a video.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Screenshots gallery -->
+  {% if screenshots %}
+  <div class="full-col">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="section-title">Violence Screenshots</span>
+        <span class="tag tag-red" style="font-size:10px">AUTO-CAPTURED</span>
+      </div>
+      <div class="screenshot-grid">
+        {% for e in screenshots %}
+        {% if e.screenshot %}
+        <div class="screenshot-item">
+          <img src="/media/{{ e.screenshot }}" alt="screenshot" loading="lazy">
+          <div class="screenshot-time">{{ e.timestamp|date:"M d H:i" }} · {{ e.confidence|floatformat:3 }}</div>
+        </div>
+        {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const daily = {{ daily_json|safe }};
+const labels = daily.map(d => d.date.slice(5));
+const vData  = daily.map(d => d.violence);
+const sData  = daily.map(d => d.safe);
+
+// Trend chart (hand-drawn canvas)
+const tc = document.getElementById('trendChart');
+if (tc) {
+  tc.width = tc.parentElement.offsetWidth - 40;
+  tc.height = 200;
+  const ctx = tc.getContext('2d');
+  const W = tc.width, H = tc.height;
+  const pad = {top:10, right:10, bottom:30, left:30};
+  const cw = W - pad.left - pad.right;
+  const ch = H - pad.top - pad.bottom;
+  const maxVal = Math.max(...vData, ...sData, 1);
+
+  // Grid
+  ctx.strokeStyle = '#1e2d3d'; ctx.lineWidth = 1;
+  [0,.25,.5,.75,1].forEach(v => {
+    const y = pad.top + ch*(1-v);
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left+cw, y); ctx.stroke();
+    ctx.fillStyle='#3d5166'; ctx.font='9px Share Tech Mono';
+    ctx.fillText(Math.round(v*maxVal), 2, y+4);
+  });
+
+  const barW = cw / labels.length;
+  labels.forEach((lbl, i) => {
+    const x = pad.left + i * barW;
+    const vH = (vData[i] / maxVal) * ch;
+    const sH = (sData[i] / maxVal) * ch;
+
+    // Violence bar
+    ctx.fillStyle = 'rgba(255,34,68,0.7)';
+    ctx.fillRect(x+4, pad.top+ch-vH, barW/2-6, vH);
+
+    // Safe bar
+    ctx.fillStyle = 'rgba(0,230,118,0.5)';
+    ctx.fillRect(x+barW/2, pad.top+ch-sH, barW/2-6, sH);
+
+    // Label
+    ctx.fillStyle = '#3d5166'; ctx.font = '9px Share Tech Mono';
+    ctx.fillText(lbl, x+4, H-8);
+  });
+
+  // Legend
+  ctx.fillStyle='rgba(255,34,68,0.7)'; ctx.fillRect(pad.left, 0, 10, 10);
+  ctx.fillStyle='#7a8fa6'; ctx.font='9px Share Tech Mono'; ctx.fillText('Violence', pad.left+14, 9);
+  ctx.fillStyle='rgba(0,230,118,0.5)'; ctx.fillRect(pad.left+70, 0, 10, 10);
+  ctx.fillStyle='#7a8fa6'; ctx.fillText('Safe', pad.left+84, 9);
+}
+
+// Pie chart
+const pc = document.getElementById('pieChart');
+if (pc) {
+  const vTotal = {{ violence_cnt }};
+  const sTotal = {{ safe_cnt }};
+  const total  = vTotal + sTotal;
+  pc.width = 200; pc.height = 200;
+  const ctx2 = pc.getContext('2d');
+  if (total > 0) {
+    const vAngle = (vTotal / total) * 2 * Math.PI;
+    ctx2.beginPath(); ctx2.moveTo(100,100);
+    ctx2.arc(100,100,80, -Math.PI/2, -Math.PI/2 + vAngle);
+    ctx2.closePath(); ctx2.fillStyle='rgba(255,34,68,0.8)'; ctx2.fill();
+    ctx2.beginPath(); ctx2.moveTo(100,100);
+    ctx2.arc(100,100,80, -Math.PI/2 + vAngle, -Math.PI/2 + 2*Math.PI);
+    ctx2.closePath(); ctx2.fillStyle='rgba(0,230,118,0.6)'; ctx2.fill();
+    ctx2.beginPath(); ctx2.arc(100,100,40,0,2*Math.PI);
+    ctx2.fillStyle='#111820'; ctx2.fill();
+    ctx2.fillStyle='#e8f0fe'; ctx2.font='bold 18px Barlow Condensed';
+    ctx2.textAlign='center'; ctx2.fillText(total, 100, 96);
+    ctx2.fillStyle='#3d5166'; ctx2.font='9px Share Tech Mono';
+    ctx2.fillText('TOTAL', 100, 110);
+  } else {
+    ctx2.beginPath(); ctx2.arc(100,100,80,0,2*Math.PI);
+    ctx2.fillStyle='#162030'; ctx2.fill();
+    ctx2.fillStyle='#3d5166'; ctx2.font='11px Share Tech Mono';
+    ctx2.textAlign='center'; ctx2.fillText('NO DATA', 100, 104);
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "detection/base.html" %}
+{% block title %}VALERT — History{% endblock %}
+{% block extra_styles %}
+.hist-layout{max-width:1100px;margin:0 auto;padding:28px 24px}
+.page-title{font-family:var(--condensed);font-size:32px;font-weight:900;letter-spacing:1px;margin-bottom:4px}
+.page-sub{font-size:13px;color:var(--text-secondary);margin-bottom:24px}
+.panel{background:var(--bg-card);border:1px solid var(--border);border-radius:6px;overflow:hidden}
+table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px}
+th{padding:10px 16px;text-align:left;color:var(--text-muted);font-size:10px;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--bg-panel);position:sticky;top:0}
+td{padding:9px 16px;border-bottom:1px solid var(--border);color:var(--text-secondary)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-raised)}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:2px;font-size:10px;font-weight:700;letter-spacing:1px;border:1px solid}
+.badge-v{color:var(--red);border-color:var(--red-dim);background:var(--red-glow)}
+.badge-s{color:var(--green);border-color:var(--green-dim);background:var(--green-glow)}
+.no-data{padding:60px;text-align:center;font-family:var(--mono);font-size:12px;color:var(--text-muted)}
+.tg-sent{color:var(--blue);font-size:10px}
+{% endblock %}
+{% block content %}
+<div class="hist-layout">
+  <div style="margin-bottom:8px"><span class="tag tag-blue">History</span></div>
+  <div class="page-title">☰ DETECTION HISTORY</div>
+  <div class="page-sub">All detection events logged for your account</div>
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">All Events ({{ events|length }})</span>
+      <span class="tag tag-red" style="font-size:10px">{{ request.user.username|upper }}</span>
+    </div>
+    {% if events %}
+    <div style="overflow-x:auto;max-height:75vh;overflow-y:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Timestamp</th><th>Type</th><th>Status</th>
+            <th>Confidence</th><th>Video</th><th>Violence%</th><th>Screenshot</th><th>Telegram</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in events %}
+          <tr>
+            <td style="color:var(--text-muted)">{{ forloop.counter }}</td>
+            <td>{{ e.timestamp|date:"Y-m-d H:i:s" }}</td>
+            <td>{{ e.get_detection_type_display }}</td>
+            <td>
+              {% if e.status == 'violence' %}
+                <span class="badge badge-v">⚠ VIOLENCE</span>
+              {% else %}
+                <span class="badge badge-s">✓ SAFE</span>
+              {% endif %}
+            </td>
+            <td style="color:{% if e.status == 'violence' %}var(--red){% else %}var(--green){% endif %}">
+              {{ e.confidence|floatformat:4 }}
+            </td>
+            <td>{{ e.video_filename|default:"—" }}</td>
+            <td>{% if e.violence_percentage %}{{ e.violence_percentage }}%{% else %}—{% endif %}</td>
+            <td>{% if e.screenshot %}<a href="/media/{{ e.screenshot }}" target="_blank" style="color:var(--blue)">📷 view</a>{% else %}—{% endif %}</td>
+            <td>{% if e.telegram_sent %}<span class="tg-sent">✓ sent</span>{% else %}—{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="no-data">No events recorded yet.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

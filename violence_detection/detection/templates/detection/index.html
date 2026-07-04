@@ -1,0 +1,416 @@
+{% extends "detection/base.html" %}
+{% block title %}VALERT AI — Home{% endblock %}
+{% block extra_styles %}
+
+/* ── HERO ── */
+.hero {
+  padding: 80px 24px 60px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -300px; left: 50%;
+  transform: translateX(-50%);
+  width: 800px; height: 800px;
+  background: radial-gradient(ellipse at center,
+    rgba(255,34,68,0.12) 0%,
+    rgba(255,34,68,0.04) 40%,
+    transparent 70%);
+  pointer-events: none;
+  animation: breathe 6s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%,100% { transform: translateX(-50%) scale(1); opacity: 1; }
+  50%      { transform: translateX(-50%) scale(1.1); opacity: 0.7; }
+}
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--red);
+  text-transform: uppercase;
+  margin-bottom: 24px;
+  padding: 6px 16px;
+  border: 1px solid var(--red-dim);
+  border-radius: 20px;
+  background: var(--red-glow);
+}
+
+.hero-eyebrow::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--red);
+  animation: blink 1.2s step-end infinite;
+}
+
+.hero-title {
+  font-family: var(--condensed);
+  font-size: clamp(52px, 9vw, 100px);
+  font-weight: 900;
+  line-height: 0.9;
+  letter-spacing: -2px;
+  margin-bottom: 28px;
+}
+
+.hero-title .line1 { color: var(--text-primary); }
+.hero-title .line2 {
+  color: transparent;
+  -webkit-text-stroke: 2px var(--red);
+  display: block;
+}
+.hero-title .line3 { color: var(--text-primary); }
+
+.hero-sub {
+  font-size: 17px;
+  color: var(--text-secondary);
+  max-width: 500px;
+  margin: 0 auto 40px;
+  line-height: 1.7;
+  font-weight: 300;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-hero-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 32px;
+  background: var(--red);
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.25s;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-hero-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
+}
+
+.btn-hero-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(255,34,68,0.45);
+}
+
+.btn-hero-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 28px;
+  background: transparent;
+  border: 1px solid var(--border-lit);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.25s;
+  backdrop-filter: blur(4px);
+}
+
+.btn-hero-ghost:hover {
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+  background: rgba(255,255,255,0.04);
+  transform: translateY(-1px);
+}
+
+/* ── STATS BAR ── */
+.stats-bar {
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 0;
+  margin: 0 0 48px;
+  background: linear-gradient(180deg, var(--bg-panel) 0%, transparent 100%);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.stat-item {
+  text-align: center;
+  padding: 28px 16px;
+  border-right: 1px solid var(--border);
+  position: relative;
+  transition: background 0.2s;
+}
+
+.stat-item:last-child { border-right: none; }
+
+.stat-item:hover { background: rgba(255,255,255,0.02); }
+
+.stat-item::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 20%; right: 20%;
+  height: 1px;
+  background: transparent;
+  transition: background 0.2s;
+}
+
+.stat-item:hover::after { background: var(--red); }
+
+.stat-value {
+  font-family: var(--condensed);
+  font-size: 40px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+.stat-value.red   { color: var(--red); }
+.stat-value.green { color: var(--green); }
+
+.stat-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-top: 6px;
+}
+
+/* ── SECTION LABEL ── */
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.section-label-text {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.section-label-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--border) 0%, transparent 100%);
+}
+
+/* ── FEATURE CARDS ── */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-bottom: 60px;
+}
+
+.feature-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 32px 28px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+  text-decoration: none;
+  display: block;
+}
+
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-color, var(--red)), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.feature-card:hover {
+  border-color: var(--border-lit);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.4);
+}
+
+.feature-card:hover::before { opacity: 1; }
+
+.feature-card.red   { --accent-color: var(--red); }
+.feature-card.blue  { --accent-color: var(--blue); }
+.feature-card.green { --accent-color: var(--green); }
+.feature-card.amber { --accent-color: var(--amber); }
+
+/* Colored side accent */
+.feature-card::after {
+  content: '';
+  position: absolute;
+  top: 20%; bottom: 20%;
+  left: 0;
+  width: 2px;
+  border-radius: 0 2px 2px 0;
+  transition: top 0.3s, bottom 0.3s;
+}
+
+.feature-card.red::after   { background: var(--red); }
+.feature-card.blue::after  { background: var(--blue); }
+.feature-card.green::after { background: var(--green); }
+.feature-card.amber::after { background: var(--amber); }
+
+.feature-card:hover::after { top: 10%; bottom: 10%; }
+
+.feature-icon-wrap {
+  width: 48px; height: 48px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border);
+}
+
+.feature-card.red   .feature-icon-wrap { background: var(--red-glow);              border-color: var(--red-dim); }
+.feature-card.blue  .feature-icon-wrap { background: rgba(79,195,247,0.08);         border-color: var(--blue-dim); }
+.feature-card.green .feature-icon-wrap { background: var(--green-glow);             border-color: var(--green-dim); }
+.feature-card.amber .feature-icon-wrap { background: rgba(255,171,64,0.08);         border-color: #6b4400; }
+
+.feature-title {
+  font-family: var(--condensed);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+  color: var(--text-primary);
+}
+
+.feature-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 20px;
+}
+
+.feature-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  transition: gap 0.2s, color 0.2s;
+}
+
+.feature-card:hover .feature-arrow {
+  gap: 10px;
+}
+
+.feature-card.red:hover   .feature-arrow { color: var(--red); }
+.feature-card.blue:hover  .feature-arrow { color: var(--blue); }
+.feature-card.green:hover .feature-arrow { color: var(--green); }
+.feature-card.amber:hover .feature-arrow { color: var(--amber); }
+
+{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <div class="hero-eyebrow">Real-Time Threat Detection System</div>
+  <h1 class="hero-title">
+    <span class="line1">AI-POWERED</span>
+    <span class="line2">VIOLENCE</span>
+    <span class="line3">DETECTION</span>
+  </h1>
+  <p class="hero-sub">
+    Deep learning surveillance system. Analyze live camera feeds or uploaded footage to identify violent activity instantly.
+  </p>
+  <div class="hero-actions">
+    <a href="/live/" class="btn-hero-primary">◉ Start Live Detection</a>
+    <a href="/upload/" class="btn-hero-ghost">↑ Analyze Video</a>
+    <a href="/dashboard/" class="btn-hero-ghost">◈ Dashboard</a>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-value red">{{ violence_total }}</div>
+        <div class="stat-label">Violence Detected</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value green">{{ safe_total }}</div>
+        <div class="stat-label">Safe Events</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">{{ total }}</div>
+        <div class="stat-label">Total Events</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">0.30</div>
+        <div class="stat-label">Threshold</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Features -->
+  <div class="section-label">
+    <span class="section-label-text">Core Features</span>
+    <div class="section-label-line"></div>
+  </div>
+
+  <div class="features-grid">
+    <a href="/live/" class="feature-card red">
+      <div class="feature-icon-wrap">◉</div>
+      <div class="feature-title">LIVE CAMERA</div>
+      <div class="feature-desc">Real-time frame-by-frame detection from your webcam with threat meter and auto-screenshot on violence.</div>
+      <div class="feature-arrow">START DETECTION →</div>
+    </a>
+    <a href="/upload/" class="feature-card blue">
+      <div class="feature-icon-wrap">▶</div>
+      <div class="feature-title">VIDEO ANALYSIS</div>
+      <div class="feature-desc">Upload MP4, AVI, MOV files. Full frame timeline report with confidence chart and verdict.</div>
+      <div class="feature-arrow">UPLOAD VIDEO →</div>
+    </a>
+    <a href="/dashboard/" class="feature-card amber">
+      <div class="feature-icon-wrap">◈</div>
+      <div class="feature-title">DASHBOARD</div>
+      <div class="feature-desc">7-day trend charts, detection breakdown, and your violence screenshot gallery.</div>
+      <div class="feature-arrow">VIEW STATS →</div>
+    </a>
+    <a href="/settings/" class="feature-card green">
+      <div class="feature-icon-wrap">✈</div>
+      <div class="feature-title">TELEGRAM ALERTS</div>
+      <div class="feature-desc">Instant Telegram notifications with auto-captured screenshot when violence is detected.</div>
+      <div class="feature-arrow">CONFIGURE →</div>
+    </a>
+  </div>
+
+</div>
+{% endblock %}

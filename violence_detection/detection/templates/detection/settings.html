@@ -1,0 +1,138 @@
+{% extends "detection/base.html" %}
+{% block title %}VALERT — Settings{% endblock %}
+{% block extra_styles %}
+.set-layout{max-width:800px;margin:0 auto;padding:28px 24px}
+.page-title{font-family:var(--condensed);font-size:32px;font-weight:900;letter-spacing:1px;margin-bottom:4px}
+.page-sub{font-size:13px;color:var(--text-secondary);margin-bottom:24px}
+.panel{background:var(--bg-card);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:18px}
+.set-body{padding:24px}
+.form-group{margin-bottom:20px}
+label{display:block;font-family:var(--mono);font-size:11px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+input[type=text],input[type=number],input[type=password]{width:100%;background:var(--bg-raised);border:1px solid var(--border-lit);border-radius:4px;padding:10px 14px;color:var(--text-primary);font-family:var(--mono);font-size:13px;outline:none;transition:border-color .2s}
+input:focus{border-color:var(--red-dim);box-shadow:0 0 0 2px var(--red-glow)}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)}
+.toggle-row:last-of-type{border-bottom:none}
+.toggle-info{}
+.toggle-title{font-size:14px;font-weight:600;margin-bottom:2px}
+.toggle-sub{font-size:12px;color:var(--text-secondary)}
+.switch{position:relative;width:44px;height:24px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;inset:0;background:var(--bg-raised);border:1px solid var(--border-lit);border-radius:24px;cursor:pointer;transition:.3s}
+.slider:before{content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:var(--text-muted);border-radius:50%;transition:.3s}
+input:checked+.slider{background:var(--red);border-color:var(--red-dim)}
+input:checked+.slider:before{transform:translateX(20px);background:#fff}
+.form-actions{display:flex;gap:10px;margin-top:8px}
+.msg{padding:10px 16px;border-radius:4px;font-family:var(--mono);font-size:12px;margin-bottom:16px;border:1px solid}
+.msg.success{color:var(--green);border-color:var(--green-dim);background:var(--green-glow)}
+.msg.error{color:var(--red);border-color:var(--red-dim);background:var(--red-glow)}
+.help-text{font-family:var(--mono);font-size:10px;color:var(--text-muted);margin-top:4px;letter-spacing:.5px}
+.steps{background:var(--bg-raised);border:1px solid var(--border);border-radius:4px;padding:14px;margin-bottom:16px}
+.steps ol{padding-left:16px}
+.steps li{font-family:var(--mono);font-size:11px;color:var(--text-secondary);margin-bottom:6px;line-height:1.6}
+.steps li a{color:var(--blue)}
+{% endblock %}
+{% block content %}
+<div class="set-layout">
+  <div style="margin-bottom:8px"><span class="tag tag-blue">Configuration</span></div>
+  <div class="page-title">⚙ SETTINGS</div>
+  <div class="page-sub">Configure detection thresholds and alert settings</div>
+
+  {% if msg %}
+  <div class="msg {{ msg_type }}">{{ msg }}</div>
+  {% endif %}
+
+  <!-- System Settings -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">◈ System Settings</span>
+    </div>
+    <div class="set-body">
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="save_system">
+        <div class="form-group">
+          <label>Detection Threshold (0.0 – 1.0)</label>
+          <input type="number" name="threshold" step="0.01" min="0.1" max="0.9" value="{{ sys.threshold|default:'0.3' }}">
+          <div class="help-text">Frames above this score are flagged as violence. Lower = more sensitive.</div>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-title">Auto Screenshot on Violence</div>
+            <div class="toggle-sub">Automatically save a screenshot when violence is detected</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" name="auto_screenshot" {% if sys.auto_screenshot %}checked{% endif %}>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-title">Telegram Alerts</div>
+            <div class="toggle-sub">Send Telegram message when violence is detected</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" name="telegram_alerts" {% if sys.telegram_alerts %}checked{% endif %}>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="form-actions" style="margin-top:20px">
+          <button type="submit" class="btn btn-red">Save System Settings</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Telegram Settings -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">✈ Telegram Bot Settings</span>
+    </div>
+    <div class="set-body">
+
+      <div class="steps">
+        <strong style="font-family:var(--mono);font-size:11px;color:var(--blue);letter-spacing:1px">HOW TO SETUP TELEGRAM BOT:</strong>
+        <ol style="margin-top:8px">
+          <li>Open Telegram → search <strong>@BotFather</strong> → send <code>/newbot</code></li>
+          <li>Follow steps → copy the <strong>Bot Token</strong> it gives you</li>
+          <li>Start a chat with your new bot, send any message</li>
+          <li>Visit: <a href="https://api.telegram.org/bot{TOKEN}/getUpdates" target="_blank">api.telegram.org/bot{TOKEN}/getUpdates</a> → find your <strong>chat.id</strong></li>
+          <li>Paste both below and click Test Connection</li>
+        </ol>
+      </div>
+
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="save_telegram">
+        <div class="form-group">
+          <label>Bot Token</label>
+          <input type="text" name="bot_token" value="{{ tg.bot_token|default:'' }}" placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11">
+        </div>
+        <div class="form-group">
+          <label>Chat ID</label>
+          <input type="text" name="chat_id" value="{{ tg.chat_id|default:'' }}" placeholder="-1001234567890 or 123456789">
+        </div>
+        <div class="form-group">
+          <label>Alert Cooldown (seconds)</label>
+          <input type="number" name="cooldown" value="{{ tg.alert_cooldown_seconds|default:'60' }}" min="10" max="3600">
+          <div class="help-text">Minimum time between alerts to avoid spam</div>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-title">Telegram Enabled</div>
+            <div class="toggle-sub">Master on/off for this bot</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" name="enabled" {% if tg.enabled %}checked{% endif %}>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="form-actions" style="margin-top:20px">
+          <button type="submit" class="btn btn-red">Save Telegram Settings</button>
+          <button type="submit" formaction="" onclick="this.form.querySelector('[name=action]').value='test_telegram'" class="btn btn-ghost">✈ Test Connection</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
