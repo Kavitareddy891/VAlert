@@ -3,7 +3,6 @@ import cv2
 import os
 import base64
 from datetime import datetime
-
 _model = None
 
 def get_model():
