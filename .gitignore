@@ -1,28 +1,7 @@
-# Virtual environments
 .envi/
 venv/
 env/
-
-# Python
 __pycache__/
 *.pyc
-
-# VS Code
 .vscode/
-
-# Environment variables
 .env
-
-# Django database
-db.sqlite3
-
-# Media files
-media/
-media/screenshots/
-media/uploads/
-
-# Static files
-staticfiles/
-
-# Logs
-*.log
