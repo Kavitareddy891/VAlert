@@ -1,23 +1,15 @@
 from pathlib import Path
 import os
-import dj_database_url
-
+ 
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-# Security
-SECRET_KEY = os.environ.get(
-    "SECRET_KEY",
-    "django-insecure-change-this-in-production-xyz123"
-)
-
-DEBUG = os.environ.get("DEBUG", "False") == "True"
-
-ALLOWED_HOSTS = os.environ.get(
-    "ALLOWED_HOSTS",
-    "localhost,127.0.0.1"
-).split(",")
-
-# Applications
+ 
+SECRET_KEY = "django-insecure-change-this-in-production-xyz123"
+ 
+# Must be True for media files to be served locally
+DEBUG = True
+ 
+ALLOWED_HOSTS = ['*']
+ 
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -27,11 +19,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'detection',
 ]
-
-# Middleware
+ 
+# Removed whitenoise — not needed for local development
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -39,9 +30,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
+ 
 ROOT_URLCONF = 'violence_detection.urls'
-
+ 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -57,42 +48,41 @@ TEMPLATES = [
         },
     },
 ]
-
+ 
 WSGI_APPLICATION = 'violence_detection.wsgi.application'
-
-# Database
+ 
+# Simple SQLite — no dj_database_url needed
 DATABASES = {
-    "default": dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-        conn_max_age=600
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
 }
-
-# Static Files
-STATIC_URL = '/static/'
+ 
+# Static files
+STATIC_URL  = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-# Media Files
-MEDIA_URL = '/media/'
+ 
+# Media files — screenshots and uploads
+MEDIA_URL  = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
-
+ 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
+ 
 # ==========================
 # ML Model Configuration
 # ==========================
-
-MODEL_PATH = BASE_DIR / "violence_detection" / "modelnew.h5"
-
-IMG_SIZE = 128
+ 
+# IMPORTANT: Update this to your actual model path
+MODEL_PATH = r'D:\visionguard_v2\violence_detection\api\modelnew.h5'
+ 
+IMG_SIZE  = 128
 THRESHOLD = 0.3
-
+ 
 # Authentication
-LOGIN_URL = '/login/'
+LOGIN_URL          = '/login/'
 LOGIN_REDIRECT_URL = '/'
-
-# Upload Limits
+ 
+# Upload limits (500MB)
 DATA_UPLOAD_MAX_MEMORY_SIZE = 524288000
 FILE_UPLOAD_MAX_MEMORY_SIZE = 524288000
